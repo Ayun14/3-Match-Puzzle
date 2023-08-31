@@ -1,7 +1,7 @@
-using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 public class Board : MonoBehaviour
 {
@@ -57,22 +57,56 @@ public class Board : MonoBehaviour
 
     private void FillRandom()
     {
+        int maxInteractions = 100;
+        int iterations = 0;
+
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
             {
-                GameObject randomPiece = Instantiate(GetRandomGamePiece(), Vector3.zero, Quaternion.identity, transform);
+                GamePiece piece = FillRandomAt(i, j);
 
-                if (randomPiece != null)
+                while (HasMatchOnFill(i, j))
                 {
-                    randomPiece.GetComponent<GamePiece>().Init(this);
+                    ClearPieceAt(i, j);
+                    piece = FillRandomAt(i, j);
+                    iterations++;
 
-                    PlaceGamePiece(randomPiece.GetComponent<GamePiece>(), i, j);
+                    if (iterations >= maxInteractions) break;
                 }
             }
         }
     }
 
+    private GamePiece FillRandomAt(int i, int j)
+    {
+        GameObject randomPiece = Instantiate(GetRandomGamePiece(), Vector3.zero, Quaternion.identity, transform);
+
+        if (randomPiece != null)
+        {
+            randomPiece.GetComponent<GamePiece>().Init(this);
+
+            PlaceGamePiece(randomPiece.GetComponent<GamePiece>(), i, j);
+
+            randomPiece.transform.parent = transform;
+
+            return randomPiece.GetComponent<GamePiece>();
+        }
+        return null;
+    }
+
+    private bool HasMatchOnFill(int x, int y, int minLength = 3)
+    {
+        List<GamePiece> leftMatches = FindMatches(x, y, new Vector2(-1, 0), minLength);
+        List<GamePiece> downMatches = FindMatches(x, y, new Vector2(0, -1), minLength);
+
+        if (leftMatches == null)
+            leftMatches = new List<GamePiece>();
+        if (downMatches == null)
+            downMatches = new List<GamePiece>();
+
+        return (leftMatches.Count > 0 || downMatches.Count > 0);
+    }
     private void SetupCamera()
     {
         Camera.main.transform.position = new Vector3((float)(width - 1) / 2, (float)(height - 1) / 2, -10f);
@@ -118,7 +152,7 @@ public class Board : MonoBehaviour
     {
         if (m_targetTile != null && m_clickedTile != null)
         {
-                SwitchTiles(m_clickedTile, m_targetTile);
+            SwitchTiles(m_clickedTile, m_targetTile);
         }
         m_targetTile = null;
         m_clickedTile = null;
@@ -152,8 +186,17 @@ public class Board : MonoBehaviour
             }
             else
             {
-                HighlightMatchesAt(clickedTile.xIndex, clickedTile.yIndex);
-                HighlightMatchesAt(targetTile.xIndex, targetTile.yIndex);
+                yield return new WaitForSeconds(swapTime);
+                ClearPieceAt(clickedPieceMatches);
+                ClearPieceAt(targetPieceMatches);
+
+                CollapseColumn(clickedPieceMatches);
+                CollapseColumn(targetPieceMatches);
+
+                //HighlightMatchesAt(clickedTile.xIndex, clickedTile.yIndex);
+                //HighlightMatchesAt(targetTile.xIndex, targetTile.yIndex);
+
+                //하이라이트 말고 지우기
             }
         }
     }
@@ -167,6 +210,7 @@ public class Board : MonoBehaviour
 
         return false;
     }
+
 
     List<GamePiece> FindMatches(int startX, int startY, Vector2 searchDirection, int minLength = 3)
     {
@@ -186,7 +230,7 @@ public class Board : MonoBehaviour
         int nextX, nextY;
         int maxValue = (width > height) ? width : height;
 
-        for (int i = 1; i < maxValue-1; i++)
+        for (int i = 1; i < maxValue - 1; i++)
         {
             nextX = startX + (int)Mathf.Clamp(searchDirection.x, -1, 1) * i;
             nextY = startY + (int)Mathf.Clamp(searchDirection.y, -1, 1) * i;
@@ -195,6 +239,8 @@ public class Board : MonoBehaviour
                 break;
 
             GamePiece nextPiece = m_allGamePieces[nextX, nextY];
+
+            if (nextPiece == null) break;
 
             if (nextPiece.matchValue == startPiece.matchValue)
                 matches.Add(nextPiece);
@@ -211,7 +257,7 @@ public class Board : MonoBehaviour
     List<GamePiece> FindVerticalMatches(int startX, int startY, int minLength = 3)
     {
         List<GamePiece> upwardMatches = FindMatches(startX, startY, new Vector2(0, 1), 2);
-        List<GamePiece> downwardMatches = FindMatches(startX, startY, new Vector2(0, -1) ,2);
+        List<GamePiece> downwardMatches = FindMatches(startX, startY, new Vector2(0, -1), 2);
 
         if (upwardMatches == null)
             upwardMatches = new List<GamePiece>();
@@ -226,7 +272,7 @@ public class Board : MonoBehaviour
     List<GamePiece> FindHorizontalMatches(int startX, int startY, int minLength = 3)
     {
         List<GamePiece> rightdMatches = FindMatches(startX, startY, new Vector2(1, 0), 2);
-        List<GamePiece> leftMatches = FindMatches(startX, startY, new Vector2(-1, 0) ,2);
+        List<GamePiece> leftMatches = FindMatches(startX, startY, new Vector2(-1, 0), 2);
 
         if (rightdMatches == null)
             rightdMatches = new List<GamePiece>();
@@ -241,7 +287,7 @@ public class Board : MonoBehaviour
     List<GamePiece> FindMatchesAt(int x, int y, int minLength = 3)
     {
         List<GamePiece> horizMatches = FindHorizontalMatches(x, y, minLength);
-        List<GamePiece> vertMatches = FindHorizontalMatches(x, y, minLength);
+        List<GamePiece> vertMatches = FindVerticalMatches(x, y, minLength);
 
         if (horizMatches == null)
             horizMatches = new List<GamePiece>();
@@ -253,6 +299,7 @@ public class Board : MonoBehaviour
 
         return combineMatches;
     }
+
 
     void HighlightTileOff(int x, int y)
     {
@@ -289,5 +336,88 @@ public class Board : MonoBehaviour
                 HighlightMatchesAt(i, j);
             }
         }
+    }
+
+
+    void ClearPieceAt(int x, int y)
+    {
+        GamePiece pieceToClear = m_allGamePieces[x, y];
+
+        if (pieceToClear != null)
+        {
+            m_allGamePieces[x, y] = null;
+            Destroy(pieceToClear.gameObject);
+
+            HighlightTileOff(x, y);
+        }
+    }
+
+    void ClearPieceAt(List<GamePiece> gamePieces)
+    {
+        foreach (var piece in gamePieces)
+        {
+            ClearPieceAt(piece.xIndex, piece.yIndex);
+        }
+    }
+
+    void ClearBoard()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                ClearPieceAt(i, j);
+            }
+        }
+    }
+
+    List<GamePiece> CollapseColumn(int column, float collapseTime = 0.1f)
+    {
+        List<GamePiece> movingPieces = new List<GamePiece>();
+        Debug.Log(column);
+        for (int i = 0; i < height - 1; i++)
+        {
+            if (m_allGamePieces[column, i] == null)
+            {
+                for (int j = i + 1; i < height; j++)
+                {
+                    if (m_allGamePieces[column, j] != null)
+                    {
+                        m_allGamePieces[column, j].Move(column, i, collapseTime);
+                        m_allGamePieces[column, i] = m_allGamePieces[column, j];
+                        m_allGamePieces[column, i].SetCoord(column, i);
+
+                        if (!movingPieces.Contains(m_allGamePieces[column, i]))
+                        {
+                            movingPieces.Add(m_allGamePieces[column, i]);
+                        }
+                        m_allGamePieces[column, j] = null;
+                        break;
+                    }
+                }
+            }
+        }
+        return movingPieces;
+    }
+
+    List<int> GetColumns(List<GamePiece> gamePieces)
+    {
+        List<int> columns = new List<int>();
+        foreach (GamePiece piece in gamePieces)
+            if (!columns.Contains(piece.xIndex)) columns.Add(piece.xIndex);
+        //Debug.Log(columns.Count);
+        return columns;
+    }
+
+    List<GamePiece> CollapseColumn(List<GamePiece> gamePieces)
+    {
+        List<GamePiece> movingPiece = new List<GamePiece>();
+        List<int> columnsToCollapse = GetColumns(gamePieces);
+
+        foreach (int column in columnsToCollapse)
+        {
+            movingPiece = movingPiece.Union(CollapseColumn(column)).ToList();
+        }
+        return movingPiece;
     }
 }
