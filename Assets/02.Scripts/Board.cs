@@ -19,6 +19,8 @@ public class Board : MonoBehaviour
     Tile[,] m_allTiles;
     GamePiece[,] m_allGamePieces;
 
+    ParticleManager m_particleManager;
+
     Tile m_clickedTile;
     Tile m_targetTile;
 
@@ -39,6 +41,7 @@ public class Board : MonoBehaviour
     {
         m_allTiles = new Tile[width, height];
         m_allGamePieces = new GamePiece[width, height];
+        m_particleManager = FindObjectOfType<ParticleManager>();
         SetupTiles();
         SetupCamera();
         FillBoard(10, 0.5f);
@@ -388,7 +391,7 @@ public class Board : MonoBehaviour
         {
             foreach (GamePiece piece in combineMatches)
             {
-                HighlightTileOn(piece.xIndex, piece.yIndex, piece.GetComponent<SpriteRenderer>().color);
+                //HighlightTileOn(piece.xIndex, piece.yIndex, piece.GetComponent<SpriteRenderer>().color);
             }
         }
     }
@@ -399,7 +402,7 @@ public class Board : MonoBehaviour
         {
             if (piece != null)
             {
-                HighlightTileOn(piece.xIndex, piece.yIndex, piece.GetComponent<SpriteRenderer>().color);
+                //HighlightTileOn(piece.xIndex, piece.yIndex, piece.GetComponent<SpriteRenderer>().color);
             }
         }
     }
@@ -410,7 +413,7 @@ public class Board : MonoBehaviour
         {
             for (int j = 0; j < height; j++)
             {
-                HighlightMatchesAt(i, j);
+                //HighlightMatchesAt(i, j);
             }
         }
     }
@@ -425,19 +428,47 @@ public class Board : MonoBehaviour
             m_allGamePieces[x, y] = null;
             Destroy(pieceToClear.gameObject);
 
-            HighlightTileOff(x, y);
+            //HighlightTileOff(x, y);
         }
     }
-
     void ClearPieceAt(List<GamePiece> gamePieces)
     {
         foreach (var piece in gamePieces)
         {
             if (piece != null)
+            {
                 ClearPieceAt(piece.xIndex, piece.yIndex);
+                
+                if (m_particleManager != null)
+                {
+                    m_particleManager.ClearPieceFXAt(piece.xIndex, piece.yIndex);
+                }
+            }
         }
     }
+    void BreakTileAt(int x, int y)
+    {
+        Tile tileToBreak = m_allTiles[x, y];
 
+        if (tileToBreak != null && tileToBreak.tileType == TileType.breakable)
+        {
+            if (m_particleManager != null)
+            {
+                m_particleManager.BreakTileFXAt(tileToBreak.breakableValue, x, y);
+            }
+            tileToBreak.BreakTile();
+        }
+    }
+    void BreakTileAt(List<GamePiece> gamePieces)
+    {
+        foreach (var pieces in gamePieces)
+        {
+            if (pieces != null)
+            {
+                BreakTileAt(pieces.xIndex, pieces.yIndex);
+            }
+        }
+    }
     void ClearBoard()
     {
         for (int i = 0; i < width; i++)
@@ -448,6 +479,7 @@ public class Board : MonoBehaviour
             }
         }
     }
+
 
     List<GamePiece> CollapseColumn(int column, float collapseTime = 0.1f)
     {
@@ -516,6 +548,7 @@ public class Board : MonoBehaviour
             //refill
             yield return StartCoroutine(RefillRoutine());
             matches = FindAllMatches();
+            yield return new WaitForSeconds(0.5f);
         } while (matches.Count != 0);
 
         m_playerInputEnabled = true;
@@ -531,7 +564,7 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> movingPieces = new List<GamePiece>();
         List<GamePiece> matches = new List<GamePiece>();
-        HighlightMatchesAt(gamePieces);
+        //HighlightMatchesAt(gamePieces);
 
         yield return new WaitForSeconds(0.25f);
         bool isFinished = false;
@@ -539,16 +572,18 @@ public class Board : MonoBehaviour
         {
             ClearPieceAt(gamePieces);
             BreakTileAt(gamePieces);
+
             yield return new WaitForSeconds(0.25f);
             movingPieces = CollapseColumn(gamePieces);
+
             while (!IsCollapsed(movingPieces))
             {
                 yield return null;
             }
 
             yield return new WaitForSeconds(0.25f);
-
             matches = FindMatchesAt(movingPieces);
+
             if (matches.Count == 0)
             {
                 isFinished = true;
@@ -558,20 +593,6 @@ public class Board : MonoBehaviour
                 yield return StartCoroutine(ClearAndCollapseRoutine(matches));
         }
         yield return null;
-    }
-
-    private void BreakTileAt(List<GamePiece> gamePieces) // 부서지게 고치기
-    {
-        if (gamePieces != null)
-        {
-            foreach (var item in gamePieces)
-            {
-                if (item.GetComponent<Tile>().tileType == TileType.breakable)
-                    item.GetComponent<Tile>().BreakTile();
-                else
-                    return;
-            }
-        }
     }
 
     bool IsCollapsed(List<GamePiece> gamePieces)
