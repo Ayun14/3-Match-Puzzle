@@ -304,9 +304,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e27d3b2af7b6c114697a5ecd028d9b91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clearFXPrefab: {fileID: 5964697251415622516, guid: aadd0a8205eb40a41a2a054e58eebc93, type: 3}
-  breakFXPrefab: {fileID: 5350996032419727746, guid: 7c403be3c870dac4b9ee0dca81e419b0, type: 3}
-  doubleFXPrefab: {fileID: 9161638078744909580, guid: 3802c2015855d134eb904c83d2a99561, type: 3}
+  clearFXPrefab: {fileID: 4228166865067015161, guid: 4fd15ea97b30e1545867b6105218352d, type: 3}
+  breakFXPrefab: {fileID: 8114587291152112332, guid: 0690a009c928dd04ab7f51038270e892, type: 3}
+  doubleFXPrefab: {fileID: 8392895884444098996, guid: af7f4babcb88d1d4fb0563105a1767c6, type: 3}
 --- !u!4 &1056646271
 Transform:
   m_ObjectHideFlags: 0
@@ -557,11 +557,24 @@ MonoBehaviour:
   - {fileID: 5656129812663674018, guid: 501b858230d197a45b3c79fa50f9dfaf, type: 3}
   swapTime: 0.5
   startingTiles:
-  - tilePrefab: {fileID: 3459353031368266882, guid: 7368ed365efb1cf419b153fbcb213712, type: 3}
+  - Prefab: {fileID: 4829241630370077964, guid: 87107629a97cd8b42bdf395f5c6aa91e, type: 3}
     x: 2
     y: 3
     z: 1
-  - tilePrefab: {fileID: 4829241630370077964, guid: 87107629a97cd8b42bdf395f5c6aa91e, type: 3}
+  - Prefab: {fileID: 3459353031368266882, guid: 7368ed365efb1cf419b153fbcb213712, type: 3}
     x: 3
     y: 3
     z: 1
+  startingGamePieces:
+  - Prefab: {fileID: 6582517602605870799, guid: 5aa7797e171880c4d9804e95f0f6325b, type: 3}
+    x: 2
+    y: 0
+    z: 0
+  - Prefab: {fileID: 3323876123835103649, guid: 7e92eee5a47cb6e498708c720517cca0, type: 3}
+    x: 3
+    y: 0
+    z: 0
+  - Prefab: {fileID: 8357135185313530451, guid: e5f145f599393d640a2d237ac0c0d76f, type: 3}
+    x: 4
+    y: 1
+    z: 0
