@@ -11,10 +11,16 @@ public class Board : MonoBehaviour
 
     [SerializeField] private GameObject tileNormalPrefab;
     [SerializeField] private GameObject tileObstaclePrefab;
-
     [SerializeField] private GameObject[] gamePiecePrefabs;
 
+    [SerializeField] private GameObject adjacentBombPrefab;
+    [SerializeField] private GameObject columnBombPrefab;
+    [SerializeField] private GameObject rowBombPrefab;
+
     [SerializeField] private float swapTime = 0.5f;
+
+    GameObject m_targetTileBomb;
+    GameObject m_clickedTileBomb;
 
     Tile[,] m_allTiles;
     GamePiece[,] m_allGamePieces;
@@ -60,7 +66,6 @@ public class Board : MonoBehaviour
             Debug.LogWarning("Board : " + randIndex + " does not contain a valid GamePiece Prefab!");
         return gamePiecePrefabs[randIndex];
     }
-
     public void PlaceGamePiece(GamePiece gamePiece, int x, int y)
     {
         if (gamePiece == null)
@@ -73,12 +78,10 @@ public class Board : MonoBehaviour
         if (IsWithinBounds(x, y)) m_allGamePieces[x, y] = gamePiece;
         gamePiece.SetCoord(x, y);
     }
-
     bool IsWithinBounds(int x, int y)
     {
         return (x >= 0 && x < width && y >= 0 && y < height);
     }
-
     private void FillBoard(int falseYoffset = 0, float moveTime = 0.1f)
     {
         int maxInteractions = 100;
@@ -104,7 +107,6 @@ public class Board : MonoBehaviour
             }
         }
     }
-
     private GamePiece FillRandomAt(int i, int j, int falseYoffset = 0, float moveTime = 0.1f)
     {
         if (!IsWithinBounds(i, j)) return null;
@@ -118,8 +120,7 @@ public class Board : MonoBehaviour
         }
         return null;
     }
-
-    void RePlaceWithRandom(List<GamePiece> gamePieces, int x, int y)
+    private void RePlaceWithRandom(List<GamePiece> gamePieces, int x, int y)
     {
         foreach (GamePiece piece in gamePieces)
         {
@@ -130,7 +131,6 @@ public class Board : MonoBehaviour
                 FillRandomAt(piece.xIndex, piece.yIndex, falseYoffset, moveTime);
         }
     }
-
     private void MakeGamePiece(GameObject piece, int i, int j, int falseYoffset = 0, float moveTime = 0.1f)
     {
         if (piece != null && IsWithinBounds(i, j))
@@ -148,7 +148,19 @@ public class Board : MonoBehaviour
             piece.transform.parent = transform;
         }
     }
+    private GameObject MakeBomb(GameObject piece, int i, int j)
+    {
+        if (piece != null && IsWithinBounds(i, j))
+        {
+            GameObject bomb = Instantiate(piece, new Vector3(i, j, 0), Quaternion.identity);
+            bomb.GetComponent<Bomb>().Init(this);
+            bomb.GetComponent<Bomb>().SetCoord(i, j);
+            bomb.transform.parent = transform;
 
+            return bomb;
+        }
+        return null;
+    }
     private bool HasMatchOnFill(int x, int y, int minLength = 3)
     {
         List<GamePiece> leftMatches = FindMatches(x, y, new Vector2(-1, 0), minLength);
@@ -218,7 +230,6 @@ public class Board : MonoBehaviour
             Debug.Log("Clicked tile : " + tile.name);
         }
     }
-
     public void DragToTile(Tile tile)
     {
         if (m_clickedTile != null && IsNextTo(tile, m_clickedTile)) // 이웃된 GamePiece만 이동
@@ -226,7 +237,6 @@ public class Board : MonoBehaviour
             m_targetTile = tile;
         }
     }
-
     public void ReleaseTile()
     {
         if (m_targetTile != null && m_clickedTile != null)
@@ -236,12 +246,10 @@ public class Board : MonoBehaviour
         m_targetTile = null;
         m_clickedTile = null;
     }
-
     private void SwitchTiles(Tile clickedTile, Tile targetTile)
     {
         StartCoroutine(SwitchTileRoutine(clickedTile, targetTile));
     }
-
     IEnumerator SwitchTileRoutine(Tile clickedTile, Tile targetTile)
     {
         if (m_playerInputEnabled)
@@ -268,12 +276,30 @@ public class Board : MonoBehaviour
                 else
                 {
                     yield return new WaitForSeconds(swapTime);
+                    Vector2 swipeDirection = new Vector2(targetTile.xIndex - clickedTile.xIndex,
+                        targetTile.yIndex - clickedTile.yIndex);
+                    m_clickedTileBomb = DropBomb(clickedTile.xIndex, clickedTile.yIndex,
+                        swipeDirection, clickedPieceMatches);
+                    m_targetTileBomb = DropBomb(targetTile.xIndex, targetTile.yIndex,
+                        swipeDirection, targetPieceMatches);
+
+                    if (m_clickedTileBomb != null && targetPiece != null)
+                    {
+                        GamePiece clickedBombPiece = m_clickedTileBomb.GetComponent<GamePiece>();
+                        clickedBombPiece.ChangeColor(targetPiece);
+                    }
+
+                    if (m_targetTileBomb != null && clickedPiece != null)
+                    {
+                        GamePiece targetBombPiece = m_targetTileBomb.GetComponent<GamePiece>();
+                        targetBombPiece.ChangeColor(clickedPiece);
+                    }
+
                     ClearAndRefillBoard(clickedPieceMatches.Union(targetPieceMatches).ToList());
                 }
             }
         }
     }
-
     bool IsNextTo(Tile start, Tile end) // 이웃된 GamePiece만 이동
     {
         if (Mathf.Abs(start.xIndex - end.xIndex) == 1 && start.yIndex == end.yIndex)
@@ -328,7 +354,6 @@ public class Board : MonoBehaviour
 
         return null;
     }
-
     List<GamePiece> FindVerticalMatches(int startX, int startY, int minLength = 3)
     {
         List<GamePiece> upwardMatches = FindMatches(startX, startY, new Vector2(0, 1), 2);
@@ -343,7 +368,6 @@ public class Board : MonoBehaviour
 
         return (combinedMatches.Count >= minLength) ? combinedMatches : null;
     }
-
     List<GamePiece> FindHorizontalMatches(int startX, int startY, int minLength = 3)
     {
         List<GamePiece> rightMatches = FindMatches(startX, startY, new Vector2(1, 0), 2);
@@ -358,7 +382,6 @@ public class Board : MonoBehaviour
 
         return (combinedMatches.Count >= minLength) ? combinedMatches : null;
     }
-
     List<GamePiece> FindMatchesAt(int x, int y, int minLength = 3)
     {
         List<GamePiece> horizMatches = FindHorizontalMatches(x, y, minLength);
@@ -538,7 +561,6 @@ public class Board : MonoBehaviour
         }
         return movingPieces;
     }
-
     List<int> GetColumns(List<GamePiece> gamePieces)
     {
         List<int> columns = new List<int>();
@@ -547,7 +569,6 @@ public class Board : MonoBehaviour
         //Debug.Log(columns.Count);
         return columns;
     }
-
     List<GamePiece> CollapseColumn(List<GamePiece> gamePieces)
     {
         List<GamePiece> movingPiece = new List<GamePiece>();
@@ -559,12 +580,10 @@ public class Board : MonoBehaviour
         }
         return movingPiece;
     }
-
     void ClearAndRefillBoard(List<GamePiece> gamePieces)
     {
         StartCoroutine(ClearAndRefillBoardRoutine(gamePieces));
     }
-
     IEnumerator ClearAndRefillBoardRoutine(List<GamePiece> gamePieces)
     {
         m_playerInputEnabled = false;
@@ -583,13 +602,11 @@ public class Board : MonoBehaviour
 
         m_playerInputEnabled = true;
     }
-
     IEnumerator RefillRoutine()
     {
         FillBoard(falseYoffset, moveTime);
         yield return null;
     }
-
     IEnumerator ClearAndCollapseRoutine(List<GamePiece> gamePieces)
     {
         List<GamePiece> movingPieces = new List<GamePiece>();
@@ -603,8 +620,25 @@ public class Board : MonoBehaviour
             List<GamePiece> bombedPieces = GetBombedPieces(gamePieces);
             gamePieces = gamePieces.Union(bombedPieces).ToList();
 
+            bombedPieces = GetBombedPieces(gamePieces);
+            gamePieces = gamePieces.Union(bombedPieces).ToList();
+
             ClearPieceAt(gamePieces);
             BreakTileAt(gamePieces);
+
+            if (m_clickedTileBomb != null)
+            {
+                ActivateBomb(m_clickedTileBomb);
+                m_clickedTileBomb = null;
+            }
+
+            if (m_targetTileBomb != null)
+            {
+                ActivateBomb(m_targetTileBomb);
+                m_targetTileBomb = null;
+            }
+
+            yield return new WaitForSeconds(0.2f);
 
             movingPieces = CollapseColumn(gamePieces);
             yield return new WaitForSeconds(0.25f);
@@ -638,7 +672,6 @@ public class Board : MonoBehaviour
         }
         return true;
     }
-
     List<GamePiece> GetRowPieces(int row)
     {
         List<GamePiece> gamePieces = new List<GamePiece>();
@@ -712,5 +745,74 @@ public class Board : MonoBehaviour
             }
         }
         return allPiecesToClear;
+    }
+    bool IsCornerMatch(List<GamePiece> gamePieces)
+    {
+        bool vertical = false;
+        bool horizontal = false;
+
+        int startX = -1;
+        int startY = -1;
+
+        foreach (GamePiece piece in gamePieces)
+        {
+            if (piece != null)
+            {
+                if (startX == -1 || startY == -1)
+                {
+                    startX = piece.xIndex;
+                    startY = piece.yIndex;
+                    continue;
+                }
+
+                if (piece.xIndex != startX && piece.yIndex == startY)
+                    horizontal = true;
+
+                if (piece.xIndex == startX && piece.yIndex != startY)
+                    vertical = true;
+            }
+        }
+
+        return (horizontal && vertical);
+    }
+    GameObject DropBomb(int x, int y, Vector2 swapDirection, List<GamePiece> gamePieces)
+    {
+        GameObject bomb = null;
+        // bomb 조건 : 4개 이상
+
+        if (gamePieces.Count >= 4)
+        {
+            if (IsCornerMatch(gamePieces))
+            {
+                if (adjacentBombPrefab != null)
+                    bomb = MakeBomb(adjacentBombPrefab, x, y);
+            }
+            else
+            {
+                if (swapDirection.x != 0)
+                {
+                    if (columnBombPrefab != null)
+                        bomb = MakeBomb(columnBombPrefab, x, y);
+                }
+                else
+                {
+                    if (rowBombPrefab != null)
+                        bomb = MakeBomb(rowBombPrefab, x, y);
+                }
+            }
+            
+        }
+        return bomb;
+    }
+
+    void ActivateBomb(GameObject bomb)
+    {
+        int x = (int)bomb.transform.position.x;
+        int y = (int)bomb.transform.position.y;
+
+        if (IsWithinBounds(x, y))
+        {
+            m_allGamePieces[x, y] = bomb.GetComponent<GamePiece>();
+        }
     }
 }

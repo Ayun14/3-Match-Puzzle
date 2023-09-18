@@ -113,4 +113,20 @@ public class GamePiece : MonoBehaviour
         }
         isMoving = false;
     }
+
+    public void ChangeColor(GamePiece pieceToMatch)
+    {
+        SpriteRenderer renderToChange = GetComponent<SpriteRenderer>();
+
+        if (pieceToMatch != null)
+        {
+            SpriteRenderer rendererToMatch = pieceToMatch.GetComponent<SpriteRenderer>();
+
+            if (rendererToMatch != null && renderToChange != null)
+            {
+                renderToChange.color = rendererToMatch.color;
+            }
+            matchValue = pieceToMatch.matchValue;
+        }
+    }
 }
