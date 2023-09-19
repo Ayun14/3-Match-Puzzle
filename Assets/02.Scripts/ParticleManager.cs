@@ -7,6 +7,7 @@ public class ParticleManager : MonoBehaviour
     public GameObject clearFXPrefab;
     public GameObject breakFXPrefab;
     public GameObject doubleFXPrefab;
+    public GameObject bombClearFXPrefab;
 
     public void ClearPieceFXAt(int x, int y, int z = 0)
     {
@@ -20,7 +21,6 @@ public class ParticleManager : MonoBehaviour
                 particlePlayer.Play();
         }
     }
-
     public void BreakTileFXAt(int breakableValue, int x, int y, int z = 0)
     {
         GameObject breakFX = null;
@@ -50,6 +50,17 @@ public class ParticleManager : MonoBehaviour
                 particlePlayer.Play();
                 Debug.Log("");
             }
+        }
+    }
+    public void BombFXAt(int x, int y, int z = 0)
+    {
+        if (bombClearFXPrefab != null)
+        {
+            GameObject bombFX = Instantiate(bombClearFXPrefab, new Vector3(x, y, 0), Quaternion.identity);
+
+            ParticleSystem particlePlayer = bombFX.GetComponent<ParticleSystem>();
+            if (particlePlayer != null)
+                particlePlayer.Play();
         }
     }
 }
