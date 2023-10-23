@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\launcher"
+    name=":launcher"
+    type="APP"
+    maven="Gradle:launcher:"
+    gradle="7.1.2"
+    buildFolder="build"
+    bootClassPath="C:\Users\ggmuser\Documents\Adobe\2022.3.7f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platforms\android-32\android.jar;C:\Users\ggmuser\Documents\Adobe\2022.3.7f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\build-tools\32.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="11"
+    compileTarget="android-32"
+    neverShrinking="true">
+  <lintOptions
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

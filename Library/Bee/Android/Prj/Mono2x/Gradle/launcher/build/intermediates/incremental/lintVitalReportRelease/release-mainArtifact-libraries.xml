@@ -1,0 +1,19 @@
+<libraries>
+  <library
+      name="D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle@@:unityLibrary::release"
+      jars="D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\unityLibrary\build\.transforms\507a38a6e841bee0112d3e1eaa137f3b\transformed\out\jars\classes.jar;D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\unityLibrary\build\.transforms\507a38a6e841bee0112d3e1eaa137f3b\transformed\out\jars\libs\unity-classes.jar"
+      resolved="Gradle:unityLibrary:unspecified"
+      folder="D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\unityLibrary\build\.transforms\507a38a6e841bee0112d3e1eaa137f3b\transformed\out"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
+      name="__local_aars__:D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\unityLibrary\libs\unity-classes.jar:unspecified@jar"
+      jars="D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\unityLibrary\libs\unity-classes.jar"
+      resolved="__local_aars__:D:\GitHub\3-Match-Puzzle\Library\Bee\Android\Prj\Mono2x\Gradle\unityLibrary\libs\unity-classes.jar:unspecified"/>
+</libraries>
