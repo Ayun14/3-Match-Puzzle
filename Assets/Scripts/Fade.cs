@@ -26,11 +26,11 @@ public class Fade : MonoBehaviour
         StartCoroutine(FadeRoutine(1, 0));
     }
 
-    private IEnumerator FadeRoutine(int a, int goleA)
+    private IEnumerator FadeRoutine(int startA, int goleA)
     {
         _image.enabled = true;
         Color startColor = _image.color;
-        _image.color = new Color(startColor.r, startColor.g, startColor.b, a);
+        _image.color = new Color(startColor.r, startColor.g, startColor.b, startA);
 
         Tween tween = _image.DOFade(goleA, 0.7f);
         yield return new WaitForSeconds(0.6f);
